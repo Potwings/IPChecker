@@ -24,16 +24,22 @@ public class IPRangeCheckServiceTests {
      * 테스트를 위해 외부에 노출시키는 것이 맞을까??
      *
      * 만일 다른 방법으로 정상적으로 추가되었는지 확인한다면 어떻게 확인해야할까??
+     * 대역대를 addRange메소드를 통하여 추가한 후 isIncludeIP 메소드를 통하여 확인 진행하자
+     *
+     *
+     * 근데 하나의 테스트 코드에서는 하나의 메소드만 테스트 해야하지 않을까??
      */
-    //arrange
-    String ipRange = "192.168.1.247/10";
 
-    //act
+    // arrange
+    String ipRange = "192.168.1.0/24";
+    String ip = "192.168.247";
+
+    // act
     ipRangeCheckService.addRange(ipRange);
-    SubnetUtils subnetUtils = new SubnetUtils(ipRange);
 
-    //assert
-//    assertThat().isEquals
+    // assert
+    //    boolean isInclude = ipRangeCheckService.isIncludeIP(ip); // 포함 여부
+    //    assertThat(isInclude).isTrue();
   }
 
   @Test
@@ -47,6 +53,15 @@ public class IPRangeCheckServiceTests {
      *
      * 1. 등록될 때 마다 Map을 새로 생성
      * 2. 중복되는 범위를 확인 후 중복되는 범위들만 수정하여 entry 추가
+     */
+  }
+
+  @Test
+  @DisplayName("중복 대역대 추가 테스트")
+  public void isIncludeIPTest() {
+    /*
+     * 대역대에 해당하는 아이피가 추가되었을 경우 정상적으로 테스트 되는지 확인
+     *
      */
   }
 }
