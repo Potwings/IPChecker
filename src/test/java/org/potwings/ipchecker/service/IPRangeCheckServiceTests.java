@@ -13,19 +13,18 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 public class IPRangeCheckServiceTests {
 
-  @Autowired private IPRangeCheckService ipRangeCheckService;
+  @Autowired
+  private IPRangeCheckService ipRangeCheckService;
 
   /**
    * 대역대 범위에 대해 확인하려하는데 어떻게 테스트를 진행해야할까?
-   * 범위를 추가한 후에 해당 범위가 정상적으로 ipRangeMap에 포함되었는지 확인할 것
-   * 허나 ipRangeMap는 service 클래스 내부에서만 범위 확인을 위해서만 쓰이는데
-   * 테스트를 위해 외부에 노출시키는 것이 맞을까??
-   *
+   * 범위를 추가한 후에 해당 범위가 정상적으로 ipRangeMap에 포함되었는지 확인할 것 허나
+   * ipRangeMap는 service 클래스 내부에서만 범위 확인을 위해서만 쓰이는데 테스트를 위해 외부에 노출시키는 것이 맞을까??
+   * <p>
    * 만일 다른 방법으로 정상적으로 추가되었는지 확인한다면 어떻게 확인해야할까??
    * 대역대를 addRange메소드를 통하여 추가한 후 isIncludeIP 메소드를 통하여 확인 진행하자
-   *
-   * 현재 addRangeTest에서는 정상적으로 실행되는지만 확인
-   * 추후 isIncludeIP 테스트에서 정확한 값이 추가되었는지 간접적으로 확인 가능
+   * <p>
+   * 현재 addRangeTest에서는 정상적으로 실행되는지만 확인 추후 isIncludeIP 테스트에서 정확한 값이 추가되었는지 간접적으로 확인 가능
    */
   @Test
   @DisplayName("대역대 추가 테스트")
@@ -50,7 +49,7 @@ public class IPRangeCheckServiceTests {
     // arrange
     String ipRange = "192.168.1.0/24";
     ipRangeCheckService.addRange(ipRange);
-    String ip = "192.168.247";
+    String ip = "192.168.1.247";
 
     // act
     boolean result = ipRangeCheckService.isIncludeIP(ip);
@@ -59,18 +58,36 @@ public class IPRangeCheckServiceTests {
     assertThat(result).isTrue();
   }
 
-   /**
+  /**
    * 중복되는 범위를 가지고 있는 대역대가 이미 등록되어 있는 경우를 위한 테스트
    * 만일 단순 숫자만으로 이야기 한다면
    * 10~100이 이미 등록되어 있을 때 1~11이 추가된다면
    * 1~100으로 변환하여 등록되어야 한다.
    *
-   * 1. 등록될 때 마다 Map을 새로 생성
-   * 2. 중복되는 범위를 확인 후 중복되는 범위들만 수정하여 entry 추가
+   * 아이피로 생각하면 192.168.1.0/24와 192.168.0.0/16이 등록된다면
+   * 192.168.0.0/16의 범위만 나와야 한다.
+   *
+   * 허나 private 변수라 직접 범위를 확인할 수는 없으므로
+   * 192.168.2.247 이라는 아이피의 포함 여부를 조회했을 때 true가 반환되어야한다.
+   * 만일 중복되는 범위가 제거되지 않았을 경우
+   * isIncludeIP의 floorEntry 메소드에서 192.168.1.0/24 가 반환되어 포함하지 않는다고 나올 것
    */
   @Test
   @DisplayName("중복 대역대 추가 테스트")
   public void addDupeRangeTest() {
+    // arrange
+    String ipRange1 = "192.168.1.0/24";
+    ipRangeCheckService.addRange(ipRange1);
+    String ipRange2 = "192.168.0.0/16";
+    ipRangeCheckService.addRange(ipRange2);
+    String ip = "192.168.2.247";
+
+    // act
+    boolean result = ipRangeCheckService.isIncludeIP(ip);
+
+    // assert
+    assertThat(result).isTrue();
+
   }
 
   /**

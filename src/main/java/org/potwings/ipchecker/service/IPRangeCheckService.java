@@ -34,8 +34,11 @@ public class IPRangeCheckService {
   }
 
   /**
-   * SubnetUtils를 통하여 대역대의 lowIp와 high 아이피를 불러옴 그 후 해당 아이피들을 long으로 변환하여 key: start, value: end로
-   * Map에 저장
+   * SubnetUtils를 통하여 대역대의 lowIp와 high 아이피를 불러옴
+   * 그 후 해당 아이피들을 long으로 변환하여 key: start, value: end로 Map에 저장
+   *
+   * 새로운 값이 추가될 경우 Map의 데이터를 어떻게 중복제거 할 것인가?
+   * 1. 등록될 때 마다 Map을 새로 생성 2. 중복되는 범위를 확인 후 중복되는 범위들만 수정하여 entry 추가
    *
    * @param ipRange
    */
