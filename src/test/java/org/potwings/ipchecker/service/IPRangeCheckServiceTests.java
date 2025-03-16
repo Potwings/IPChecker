@@ -73,21 +73,83 @@ public class IPRangeCheckServiceTests {
    * isIncludeIP의 floorEntry 메소드에서 192.168.1.0/24 가 반환되어 포함하지 않는다고 나올 것
    */
   @Test
-  @DisplayName("중복 대역대 추가 테스트")
-  public void addDupeRangeTest() {
-    // arrange
-    String ipRange1 = "192.168.1.0/24";
-    ipRangeCheckService.addRange(ipRange1);
-    String ipRange2 = "192.168.0.0/16";
-    ipRangeCheckService.addRange(ipRange2);
-    String ip = "192.168.2.247";
+  @DisplayName("추가 범위가 기존 범위보다 더 큰 경우")
+  public void testLargerNewRange() {
+    // Arrange (입력 데이터 및 예상 결과)
+    String smallRange = "192.168.1.10/30"; // 192.168.1.10 ~ 192.168.1.13
+    String largerRange = "192.168.1.8/29"; // 192.168.1.8 ~ 192.168.1.15
+    String includedIp1 = "192.168.1.8";
+    String includedIp2 = "192.168.1.15";
+    String excludedIp = "192.168.1.16";
 
-    // act
-    boolean result = ipRangeCheckService.isIncludeIP(ip);
+    // Act (실행)
+    ipRangeCheckService.addRange(smallRange);
+    ipRangeCheckService.addRange(largerRange);
 
-    // assert
-    assertThat(result).isTrue();
+    // Assert (검증)
+    assertTrue(ipRangeCheckService.isIncludeIP(includedIp1));
+    assertTrue(ipRangeCheckService.isIncludeIP(includedIp2));
+    assertFalse(ipRangeCheckService.isIncludeIP(excludedIp));
+  }
 
+  @Test
+  @DisplayName("기존 범위가 추가 범위보다 더 큰 경우")
+  public void testExistingRangeIsLarger() {
+    // Arrange
+    String largerRange = "192.168.1.8/29"; // 192.168.1.8 ~ 192.168.1.15
+    String smallRange = "192.168.1.10/30"; // 192.168.1.10 ~ 192.168.1.13
+    String includedIp1 = "192.168.1.8";
+    String includedIp2 = "192.168.1.15";
+    String excludedIp = "192.168.1.16";
+
+    // Act
+    ipRangeCheckService.addRange(largerRange);
+    ipRangeCheckService.addRange(smallRange);
+
+    // Assert
+    assertTrue(ipRangeCheckService.isIncludeIP(includedIp1));
+    assertTrue(ipRangeCheckService.isIncludeIP(includedIp2));
+    assertFalse(ipRangeCheckService.isIncludeIP(excludedIp));
+  }
+
+  @Test
+  @DisplayName("추가하는 범위가 기존 범위와 시작점이 중복되는 경우")
+  public void testDupeStartPoint() {
+    // Arrange
+    String existingRange = "192.168.1.8/29";  // 192.168.1.8 ~ 192.168.1.15
+    String newRange = "192.168.1.15/30"; // 192.168.1.15 ~ 192.168.1.18 (시작점 중복)
+    String includedIp1 = "192.168.1.8";
+    String includedIp2 = "192.168.1.18";
+    String excludedIp = "192.168.1.19";
+
+    // Act
+    ipRangeCheckService.addRange(existingRange);
+    ipRangeCheckService.addRange(newRange);
+
+    // Assert
+    assertTrue(ipRangeCheckService.isIncludeIP(includedIp1));
+    assertTrue(ipRangeCheckService.isIncludeIP(includedIp2));
+    assertFalse(ipRangeCheckService.isIncludeIP(excludedIp));
+  }
+
+  @Test
+  @DisplayName("추가하는 범위가 기존 범위와 종료점이 중복되는 경우")
+  public void testDupeEndPoint() {
+    // Arrange
+    String existingRange = "192.168.1.8/30";  // 192.168.1.8 ~ 192.168.1.11
+    String newRange = "192.168.1.4/29";  // 192.168.1.4 ~ 192.168.1.11 (종료점 중복)
+    String includedIp1 = "192.168.1.4";
+    String includedIp2 = "192.168.1.11";
+    String excludedIp = "192.168.1.3";
+
+    // Act
+    ipRangeCheckService.addRange(existingRange);
+    ipRangeCheckService.addRange(newRange);
+
+    // Assert
+    assertTrue(ipRangeCheckService.isIncludeIP(includedIp1));
+    assertTrue(ipRangeCheckService.isIncludeIP(includedIp2));
+    assertFalse(ipRangeCheckService.isIncludeIP(excludedIp));
   }
 
   /**
