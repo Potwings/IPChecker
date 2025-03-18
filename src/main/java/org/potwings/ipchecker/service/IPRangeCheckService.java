@@ -38,20 +38,32 @@ public class IPRangeCheckService {
    * 그 후 해당 아이피들을 long으로 변환하여 key: start, value: end로 Map에 저장
    *
    * 새로운 값이 추가될 경우 Map의 데이터를 어떻게 중복제거 할 것인가?
-   * 1. 등록될 때 마다 Map을 새로 생성 2. 중복되는 범위를 확인 후 중복되는 범위들만 수정하여 entry 추가
+   * 중복되는 범위를 확인 후 중복되는 entry 제거 후 추가
    *
    * @param ipRange
    */
   public boolean addRange(String ipRange) {
     SubnetUtils subnetUtils = new SubnetUtils(ipRange);
+    // 네트워크 주소, 브로드 캐스트 주소도 포함하여 검사
+    subnetUtils.setInclusiveHostCount(true);
     SubnetInfo info = subnetUtils.getInfo();
     Long rangeStart = ipToLong(info.getLowAddress());
     Long rangeEnd = ipToLong(info.getHighAddress());
     if (rangeStart == null || rangeEnd == null) {
       return false;
     }
+    Map.Entry<Long,Long> lowerEntry = ipRangeMap.floorEntry(rangeStart);
 
-    ipRangeMap.put(rangeStart, rangeEnd);
+    Long newStart = rangeStart;
+    Long newEnd = rangeEnd;
+
+    if (lowerEntry != null && lowerEntry.getValue() >= rangeStart - 1) {
+      newStart = Math.min(lowerEntry.getKey(), newStart);
+      newEnd = Math.max(lowerEntry.getValue(), newEnd);
+      ipRangeMap.remove(lowerEntry.getKey());
+    }
+
+    ipRangeMap.put(newStart, newEnd);
 
     return true;
   }
