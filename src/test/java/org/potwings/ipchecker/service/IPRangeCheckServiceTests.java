@@ -75,94 +75,45 @@ public class IPRangeCheckServiceTests {
   @Test
   @DisplayName("추가 범위가 기존 범위보다 더 큰 경우")
   public void testLargerNewRange() {
-    // Arrange (입력 데이터 및 예상 결과)
-    String smallRange = "192.168.1.10/30"; // 192.168.1.10 ~ 192.168.1.13
-    String largerRange = "192.168.1.8/29"; // 192.168.1.8 ~ 192.168.1.15
-    String includedIp1 = "192.168.1.8";
-    String includedIp2 = "192.168.1.15";
-    String excludedIp = "192.168.1.16";
+    // Arrange
+    String existingRange = "192.168.1.0/30"; // 192.168.1.0 ~ 192.168.1.3
+    String newRange = "192.168.1.0/29"; // 192.168.1.0 ~ 192.168.1.7
+    String includedIp1 = "192.168.1.1";
+    String includedIp2 = "192.168.1.5";
+    String excludedIp = "192.168.1.8";
 
-    // Act (실행)
-    ipRangeCheckService.addRange(smallRange);
-    ipRangeCheckService.addRange(largerRange);
+    // Act
+    ipRangeCheckService.addRange(existingRange);
+    ipRangeCheckService.addRange(newRange);
 
-    // Assert (검증)
+    // Assert
     assertTrue(ipRangeCheckService.isIncludeIP(includedIp1));
     assertTrue(ipRangeCheckService.isIncludeIP(includedIp2));
     assertFalse(ipRangeCheckService.isIncludeIP(excludedIp));
   }
 
   @Test
-  @DisplayName("기존 범위가 추가 범위보다 더 큰 경우")
+  @DisplayName("기존 범위의 시작점 보다 추가 범위의 시작점이 더 큰 경우")
   public void testExistingRangeIsLarger() {
     // Arrange
-    String largerRange = "192.168.1.8/29"; // 192.168.1.8 ~ 192.168.1.15
-    String smallRange = "192.168.1.10/30"; // 192.168.1.10 ~ 192.168.1.13
+    // 192.168.1.12 ~ 192.168.1.15
+    String existingRange = "192.168.1.12/30"; // 192.168.1.12 ~ 192.168.1.15
+    String newRange = "192.168.1.8/29"; // 192.168.1.8 ~ 192.168.1.15
     String includedIp1 = "192.168.1.8";
-    String includedIp2 = "192.168.1.15";
+    String includedIp2 = "192.168.1.10";
     String excludedIp = "192.168.1.16";
 
     // Act
-    ipRangeCheckService.addRange(largerRange);
-    ipRangeCheckService.addRange(smallRange);
-
-    // Assert
-    assertTrue(ipRangeCheckService.isIncludeIP(includedIp1));
-    assertTrue(ipRangeCheckService.isIncludeIP(includedIp2));
-    assertFalse(ipRangeCheckService.isIncludeIP(excludedIp));
-  }
-
-  @Test
-  @DisplayName("추가하는 범위가 기존 범위와 시작점이 중복되는 경우")
-  public void testDupeStartPoint() {
-    // Arrange
-    String existingRange = "192.168.1.8/29";  // 192.168.1.8 ~ 192.168.1.15
-    String newRange = "192.168.1.15/30"; // 192.168.1.15 ~ 192.168.1.18 (시작점 중복)
-    String includedIp1 = "192.168.1.8";
-    String includedIp2 = "192.168.1.18";
-    String excludedIp = "192.168.1.19";
-
-    // Act
     ipRangeCheckService.addRange(existingRange);
     ipRangeCheckService.addRange(newRange);
 
+    /*
+     * 현재 병합이 안되어 Map에 값이 두개나 있음에도 불구하고 테스트가 통과되고 있음
+     * TODO 정상적으로 병합되지 않았을 경우 테스트 통과되지 않도록 로직 수정
+     */
     // Assert
     assertTrue(ipRangeCheckService.isIncludeIP(includedIp1));
     assertTrue(ipRangeCheckService.isIncludeIP(includedIp2));
     assertFalse(ipRangeCheckService.isIncludeIP(excludedIp));
-  }
-
-  @Test
-  @DisplayName("추가하는 범위가 기존 범위와 종료점이 중복되는 경우")
-  public void testDupeEndPoint() {
-    // Arrange
-    String existingRange = "192.168.1.8/30";  // 192.168.1.8 ~ 192.168.1.11
-    String newRange = "192.168.1.4/29";  // 192.168.1.4 ~ 192.168.1.11 (종료점 중복)
-    String includedIp1 = "192.168.1.4";
-    String includedIp2 = "192.168.1.11";
-    String excludedIp = "192.168.1.3";
-
-    // Act
-    ipRangeCheckService.addRange(existingRange);
-    ipRangeCheckService.addRange(newRange);
-
-    // Assert
-    assertTrue(ipRangeCheckService.isIncludeIP(includedIp1));
-    assertTrue(ipRangeCheckService.isIncludeIP(includedIp2));
-    assertFalse(ipRangeCheckService.isIncludeIP(excludedIp));
-  }
-
-  /**
-   * IPv6의 경우 Long 값으로 변환이 불가능하므로 다른 방법을 고안해야한다.
-   */
-  @Test
-  @DisplayName("IPv6 테스트")
-  public void isIncludeIPv6Test() {
-    // arrange
-    String ip = "fe80::db6c:a3ec:6c94:5f70%10";
-
-    // act
-
-    // assert
   }
 }

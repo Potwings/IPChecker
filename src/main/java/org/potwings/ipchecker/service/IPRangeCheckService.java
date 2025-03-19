@@ -47,8 +47,12 @@ public class IPRangeCheckService {
     // 네트워크 주소, 브로드 캐스트 주소도 포함하여 검사
     subnetUtils.setInclusiveHostCount(true);
     SubnetInfo info = subnetUtils.getInfo();
-    Long rangeStart = ipToLong(info.getLowAddress());
-    Long rangeEnd = ipToLong(info.getHighAddress());
+    // 범위 확인을 위한 로깅 추가
+    String lowAddress = info.getLowAddress();
+    String highAddress = info.getHighAddress();
+    log.info(lowAddress + " ~ " + highAddress);
+    Long rangeStart = ipToLong(lowAddress);
+    Long rangeEnd = ipToLong(highAddress);
     if (rangeStart == null || rangeEnd == null) {
       return false;
     }
