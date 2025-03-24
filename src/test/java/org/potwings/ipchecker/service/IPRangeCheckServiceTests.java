@@ -1,10 +1,9 @@
 package org.potwings.ipchecker.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.apache.commons.net.util.SubnetUtils;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,7 +95,6 @@ public class IPRangeCheckServiceTests {
   @DisplayName("기존 범위의 시작점 보다 추가 범위의 시작점이 더 큰 경우")
   public void testExistingRangeIsLarger() {
     // Arrange
-    // 192.168.1.12 ~ 192.168.1.15
     String existingRange = "192.168.1.12/30"; // 192.168.1.12 ~ 192.168.1.15
     String newRange = "192.168.1.8/29"; // 192.168.1.8 ~ 192.168.1.15
     String includedIp1 = "192.168.1.8";
@@ -109,11 +107,27 @@ public class IPRangeCheckServiceTests {
 
     /*
      * 현재 병합이 안되어 Map에 값이 두개나 있음에도 불구하고 테스트가 통과되고 있음
-     * TODO 정상적으로 병합되지 않았을 경우 테스트 통과되지 않도록 로직 수정
      */
     // Assert
     assertTrue(ipRangeCheckService.isIncludeIP(includedIp1));
     assertTrue(ipRangeCheckService.isIncludeIP(includedIp2));
     assertFalse(ipRangeCheckService.isIncludeIP(excludedIp));
+  }
+
+  @Test
+  @DisplayName("중복 범위 병합 여부 테스트(신규 범위가 더 큰 경우)")
+  public void testIpIncludedMergedLargerNew () {
+    // Arrange
+    String existingRange = "192.168.1.8/30"; // 192.168.1.8 ~ 192.168.1.11
+    String newRange = "192.168.1.0/27"; // 192.168.1.0 ~ 192.168.1.31
+    String includedIp = "192.168.1.15";
+
+    // Act
+    ipRangeCheckService.addRange(existingRange);
+    ipRangeCheckService.addRange(newRange);
+
+    // Assert
+    // 정상적으로 병합되었다면 isIncludeIP 진행 시 floorEntry에서 newRange가 반환되어 포함으로 판정되어야함.
+    assertTrue(ipRangeCheckService.isIncludeIP(includedIp));
   }
 }
