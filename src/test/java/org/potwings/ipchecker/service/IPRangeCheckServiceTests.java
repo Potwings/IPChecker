@@ -24,9 +24,10 @@ public class IPRangeCheckServiceTests {
    * ipRangeMap는 service 클래스 내부에서만 범위 확인을 위해서만 쓰이는데 테스트를 위해 외부에 노출시키는 것이 맞을까??
    * <p>
    * 만일 다른 방법으로 정상적으로 추가되었는지 확인한다면 어떻게 확인해야할까??
-   * 대역대를 addRange메소드를 통하여 추가한 후 isIncludeIP 메소드를 통하여 확인 진행하자
+   * -> 대역대를 addRange메소드를 통하여 추가한 후 isIncludeIP 메소드를 통하여 확인 진행하자
    * <p>
-   * 현재 addRangeTest에서는 정상적으로 실행되는지만 확인 추후 isIncludeIP 테스트에서 정확한 값이 추가되었는지 간접적으로 확인 가능
+   * 현재 addRangeTest에서는 정상적으로 실행되는지만 확인
+   * isIncludeIP 테스트에서 정확한 값이 추가되었는지 간접적으로 확인 가능
    */
   @Test
   @DisplayName("대역대 추가 테스트")
@@ -43,7 +44,7 @@ public class IPRangeCheckServiceTests {
   }
 
   /**
-   * 대역대에 해당하는 아이피가 추가되어 있을 경우 정상적으로 테스트 되는지 확인
+   * 대역대가 추가되어 있을 경우 대역대에 포함되는 아이피의 포함 여부 정상적으로 반환되는지 확인
    */
   @Test
   @DisplayName("아이피 포함 여부 확인 테스트")
