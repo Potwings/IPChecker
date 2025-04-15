@@ -161,6 +161,32 @@ TDD로 진행하여 기본적인 기능인 "대역대 추가", "아이피 포함
 
 테스트 코드를 통해 기본적인 기능을 만든 후 이제 중복되는 대역대에 대한 처리가 필요하였다.
 
-### 중복되는 대역대 처리
+### 중복되는 대역대 병합
+
+서브넷 마스크로 분리된 아이피 대역대들은 하나의 큰 범위를 비트수에 따라 쪼개 놓은 것이다. 모든 대역대는 특정 지점에서 시작하고 특정 지점에서 끝나게 된다.
 
 <img src="https://github.com/user-attachments/assets/b76851c0-18ac-42b3-abbd-2d014d2c03b8" style="width: 900px; height: auto;"/>
+
+이러한 서브넷 마스크의 특성으로 인해 아래 그림처럼 일부만 겹치는 경우는 발생할 수 없다.
+
+<img src="https://github.com/user-attachments/assets/a9bd0c5e-cba6-49f6-bceb-206826f8ef3d" style="width: 900px; height: auto;"/>
+
+따라서 대역대 추가 시 중복되는 범위 병합 여부 확인을 위해 테스트해야할 케이스는 아래와 같다.
+
+
+- (기존 < 추가)
+    <img src="https://github.com/user-attachments/assets/303b2c92-0a67-4e44-8c03-c1fdea862186" style="width: 900px; height: auto;"/>
+
+- (기존 > 추가)
+    <img src="https://github.com/user-attachments/assets/dc39dd01-4c80-44a4-9c10-2615b6ab9b3c" style="width: 900px; height: auto;"/>
+
+2. 기존 대역대의 종료점이 동일하나 시작점이 다른 경우 
+- (기존 < 추가)
+    <img src="https://github.com/user-attachments/assets/68bf9d7d-bef4-4a35-9ab6-7398a6e02684" style="width: 900px; height: auto;"/>
+
+- (기존 > 추가)
+    <img src="https://github.com/user-attachments/assets/efba76cd-b18c-41ef-8dbd-549b917727e5" style="width: 900px; height: auto;"/>
+
+3. 기존 대역대에 중간에 포함되는 경우
+
+4. 기존 대역대를 중간에 포함하는 경우
