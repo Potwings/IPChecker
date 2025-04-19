@@ -1,9 +1,8 @@
 package org.potwings.ipchecker.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,25 +12,15 @@ import org.springframework.test.annotation.DirtiesContext;
 @SpringBootTest
 // 각각의 테스트 메소드가 클래스 변수를 공유하지 않도록 DirtiesContext 추가
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@Slf4j
 public class IPRangeCheckServiceTests {
 
   @Autowired
   private IPRangeCheckService ipRangeCheckService;
 
-  /**
-   * 대역대 범위에 대해 확인하려하는데 어떻게 테스트를 진행해야할까?
-   * 범위를 추가한 후에 해당 범위가 정상적으로 ipRangeMap에 포함되었는지 확인할 것 허나
-   * ipRangeMap는 service 클래스 내부에서만 범위 확인을 위해서만 쓰이는데 테스트를 위해 외부에 노출시키는 것이 맞을까??
-   * <p>
-   * 만일 다른 방법으로 정상적으로 추가되었는지 확인한다면 어떻게 확인해야할까??
-   * -> 대역대를 addRange메소드를 통하여 추가한 후 isIncludeIP 메소드를 통하여 확인 진행하자
-   * <p>
-   * 현재 addRangeTest에서는 정상적으로 실행되는지만 확인
-   * isIncludeIP 테스트에서 정확한 값이 추가되었는지 간접적으로 확인 가능
-   */
   @Test
   @DisplayName("대역대 추가 테스트")
-  public void addRangeTest() {
+  public void testAddRange() {
 
     // arrange
     String ipRange = "192.168.1.0/24";
@@ -43,12 +32,9 @@ public class IPRangeCheckServiceTests {
     assertThat(result).isTrue();
   }
 
-  /**
-   * 대역대가 추가되어 있을 경우 대역대에 포함되는 아이피의 포함 여부 정상적으로 반환되는지 확인
-   */
   @Test
   @DisplayName("아이피 포함 여부 확인 테스트")
-  public void isIncludeIPTest() {
+  public void testIsIncludeIP() {
     // arrange
     String ipRange = "192.168.1.0/24";
     ipRangeCheckService.addRange(ipRange);
@@ -61,77 +47,124 @@ public class IPRangeCheckServiceTests {
     assertThat(result).isTrue();
   }
 
-  /**
-   * 중복되는 범위를 가지고 있는 대역대가 이미 등록되어 있는 경우를 위한 테스트
-   * 만일 단순 숫자만으로 이야기 한다면
-   * 10~100이 이미 등록되어 있을 때 1~11이 추가된다면
-   * 1~100으로 변환하여 등록되어야 한다.
-   *
-   * 아이피로 생각하면 192.168.1.0/24와 192.168.0.0/16이 등록된다면
-   * 192.168.0.0/16의 범위만 나와야 한다.
-   *
-   * 허나 private 변수라 직접 범위를 확인할 수는 없으므로
-   * 192.168.2.247 이라는 아이피의 포함 여부를 조회했을 때 true가 반환되어야한다.
-   * 만일 중복되는 범위가 제거되지 않았을 경우
-   * isIncludeIP의 floorEntry 메소드에서 192.168.1.0/24 가 반환되어 포함하지 않는다고 나올 것
-   */
   @Test
-  @DisplayName("추가 범위가 기존 범위보다 더 큰 경우")
-  public void testLargerNewRange() {
-    // Arrange
-    String existingRange = "192.168.1.0/30"; // 192.168.1.0 ~ 192.168.1.3
-    String newRange = "192.168.1.0/29"; // 192.168.1.0 ~ 192.168.1.7
-    String includedIp1 = "192.168.1.1";
-    String includedIp2 = "192.168.1.5";
-    String excludedIp = "192.168.1.8";
+  @DisplayName("두 대역대 시작 지점이 동일한 경우 병합 테스트 (기존 < 추가)")
+  public void testSameStartLargerNewMerge() {
+    // arrange
+    String existRange = "192.168.2.16/31"; // 192.168.2.16 ~ 192.168.2.17
+    String newRange = "192.168.2.16/29"; // 192.168.2.16 ~ 192.168.2.23
+    String testIp = "192.168.2.22"; // 기존 포함 X 추가 후 포함 O
+    ipRangeCheckService.addRange(existRange);
+    boolean beforeAddResult = ipRangeCheckService.isIncludeIP(testIp);
 
-    // Act
-    ipRangeCheckService.addRange(existingRange);
+    // act
     ipRangeCheckService.addRange(newRange);
+    boolean afterAddResult = ipRangeCheckService.isIncludeIP(testIp);
 
-    // Assert
-    assertTrue(ipRangeCheckService.isIncludeIP(includedIp1));
-    assertTrue(ipRangeCheckService.isIncludeIP(includedIp2));
-    assertFalse(ipRangeCheckService.isIncludeIP(excludedIp));
+    //assert
+    assertThat(beforeAddResult).isFalse();
+    // 정상적으로 병합되었다면 추가 대역대의 범위를 기준으로 판단
+    assertThat(afterAddResult).isTrue();
   }
 
   @Test
-  @DisplayName("기존 범위의 시작점 보다 추가 범위의 시작점이 더 큰 경우")
-  public void testExistingRangeIsLarger() {
-    // Arrange
-    String existingRange = "192.168.1.12/30"; // 192.168.1.12 ~ 192.168.1.15
-    String newRange = "192.168.1.8/29"; // 192.168.1.8 ~ 192.168.1.15
-    String includedIp1 = "192.168.1.8";
-    String includedIp2 = "192.168.1.10";
-    String excludedIp = "192.168.1.16";
+  @DisplayName("두 대역대 시작 지점이 동일한 경우 병합 테스트 (기존 > 추가)")
+  public void testSameStartLargerExistMerge() {
+    // arrange
+    String existRange = "192.168.1.0/24"; // 192.168.1.0 ~ 192.168.1.255
+    String newRange = "192.168.1.0/25"; // 192.168.1.0 ~ 192.168.1.127
+    String testIp = "192.168.1.250"; // 기존 포함 O 추가 후 포함 O
+    ipRangeCheckService.addRange(existRange);
+    boolean beforeAddResult = ipRangeCheckService.isIncludeIP(testIp);
 
-    // Act
-    ipRangeCheckService.addRange(existingRange);
+    // act
     ipRangeCheckService.addRange(newRange);
+    boolean afterAddResult = ipRangeCheckService.isIncludeIP(testIp);
 
-    /*
-     * 현재 병합이 안되어 Map에 값이 두개나 있음에도 불구하고 테스트가 통과되고 있음
-     */
-    // Assert
-    assertTrue(ipRangeCheckService.isIncludeIP(includedIp1));
-    assertTrue(ipRangeCheckService.isIncludeIP(includedIp2));
-    assertFalse(ipRangeCheckService.isIncludeIP(excludedIp));
+    //assert
+    assertThat(beforeAddResult).isTrue();
+    // 정상적으로 병합되었다면 추가 대역대가 아닌 기존 대역대의 범위를 기준으로 판단
+    assertThat(afterAddResult).isTrue();
   }
 
   @Test
-  @DisplayName("중복 범위 병합 여부 테스트(신규 범위가 더 큰 경우)")
-  public void testIpIncludedMergedLargerNew () {
-    // Arrange
-    String existingRange = "192.168.1.8/30"; // 192.168.1.8 ~ 192.168.1.11
-    String newRange = "192.168.1.0/27"; // 192.168.1.0 ~ 192.168.1.31
-    String includedIp = "192.168.1.15";
+  @DisplayName("두 대역대 끝 지점이 동일한 경우 병합 테스트 (기존 < 추가)")
+  public void testSameEndLargerNewMerge() {
+    // arrange
+    String existRange = "192.6.0.0/15"; // 192.6.0.0 ~ 192.7.255.255
+    String newRange = "192.0.0.0/13"; // 192.0.0.0 ~ 192.7.255.255
+    String testIp = "192.5.1.5"; // 기존 포함 X 추가 후 포함 O
+    ipRangeCheckService.addRange(existRange);
+    boolean beforeAddResult = ipRangeCheckService.isIncludeIP(testIp);
 
-    // Act
-    ipRangeCheckService.addRange(existingRange);
+    // act
     ipRangeCheckService.addRange(newRange);
+    boolean afterAddResult = ipRangeCheckService.isIncludeIP(testIp);
 
-    // Assert
-    // 정상적으로 병합되었다면 isIncludeIP 진행 시 floorEntry에서 newRange가 반환되어 포함으로 판정되어야함.
-    assertTrue(ipRangeCheckService.isIncludeIP(includedIp));
+    //assert
+    assertThat(beforeAddResult).isFalse();
+    // 정상적으로 병합되었다면 추가 대역대의 범위를 기준으로 판단
+    assertThat(afterAddResult).isTrue();
+  }
+
+  @Test
+  @DisplayName("두 대역대 끝 지점이 동일한 경우 병합 테스트 (기존 > 추가)")
+  public void testSameEndLargerExistMerge() {
+    // arrange
+    String existRange = "192.168.0.0/23"; // 192.168.0.0 ~ 192.168.1.255
+    String newRange = "192.168.1.240/28"; // 192.168.1.240 ~ 192.168.1.255
+    String testIp = "192.168.1.247"; // 기존 포함 O 추가 후 포함 O
+    ipRangeCheckService.addRange(existRange);
+    boolean beforeAddResult = ipRangeCheckService.isIncludeIP(testIp);
+
+    // act
+    ipRangeCheckService.addRange(newRange);
+    boolean afterAddResult = ipRangeCheckService.isIncludeIP(testIp);
+
+    //assert
+    // 둘 다 기존 대역대를 기준으로 판단
+    assertThat(beforeAddResult).isTrue();
+    assertThat(afterAddResult).isTrue();
+  }
+
+  @Test
+  @DisplayName("기존 대역대가 추가 대역대를 포함하는 경우 병합 테스트")
+  public void testExistIncludeNewMerge() {
+    // arrange
+    String existRange = "192.0.0.0/9"; // 192.0.0.0 ~ 192.127.255.255
+    String newRange = "192.2.0.0/15"; // 192.2.0.0 ~ 192.3.255.255
+    String testIp = "192.10.1.247"; // 기존 포함 O 추가 후 포함 O
+    ipRangeCheckService.addRange(existRange);
+    boolean beforeAddResult = ipRangeCheckService.isIncludeIP(testIp);
+
+    // act
+    ipRangeCheckService.addRange(newRange);
+    boolean afterAddResult = ipRangeCheckService.isIncludeIP(testIp);
+
+    //assert
+    // 둘 다 기존 대역대를 기준으로 판단
+    assertThat(beforeAddResult).isTrue();
+    assertThat(afterAddResult).isTrue();
+
+  }
+
+  @Test
+  @DisplayName("추가 대역대가 기존 대역대를 포함하는 경우 병합 테스트")
+  public void testNewIncludeExistMerge() {
+    // arrange
+    String existRange = "200.0.0.0/6"; // 200.0.0.0 ~ 203.255.255.255
+    String newRange = "192.0.0.0/4"; // 192.0.0.0 ~ 207.255.255.255
+    String testIp = "192.168.1.247"; // 기존 포함 X 추가 후 포함 O
+    ipRangeCheckService.addRange(existRange);
+    boolean beforeAddResult = ipRangeCheckService.isIncludeIP(testIp);
+
+    // act
+    ipRangeCheckService.addRange(newRange);
+    boolean afterAddResult = ipRangeCheckService.isIncludeIP(testIp);
+
+    //assert
+    assertThat(beforeAddResult).isFalse();
+    // 정상적으로 병합되었을 경우 추가 대역대를 기준으로 판단
+    assertThat(afterAddResult).isTrue();
   }
 }
