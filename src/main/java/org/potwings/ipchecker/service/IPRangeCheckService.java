@@ -14,7 +14,23 @@ import org.springframework.stereotype.Service;
 public class IPRangeCheckService {
 
   // key: 범위 start, value: 범위 end 형식으로 아이피 범위를 저장
-  private final TreeMap<Long, Long> ipRangeMap = new TreeMap<>();
+  private TreeMap<Long, Long> ipRangeMap = new TreeMap<>();
+
+  /**
+   * 대역대 시각화를 위한 전체 아이피 목록
+   *
+   * @return 전체 아이피 대역대 목록
+   */
+  public Map<Long, Long> getIpRangeMap() {
+    return ipRangeMap;
+  }
+
+  /**
+   * 보관한 대역대 초기화
+   */
+  public void clearIpRangeMap() {
+    ipRangeMap.clear();
+  }
 
   /**
    * 아이피 입력 시 Map에 있는 Range들을 확인하여 포함되는지 여부를 반환하는 메소드
@@ -47,17 +63,15 @@ public class IPRangeCheckService {
     // 네트워크 주소, 브로드 캐스트 주소도 포함하여 검사
     subnetUtils.setInclusiveHostCount(true);
     SubnetInfo info = subnetUtils.getInfo();
-    // 범위 확인을 위한 로깅 추가
     String lowAddress = info.getLowAddress();
     String highAddress = info.getHighAddress();
-    log.info(lowAddress + " ~ " + highAddress);
     Long rangeStart = ipToLong(lowAddress);
     Long rangeEnd = ipToLong(highAddress);
     if (rangeStart == null || rangeEnd == null) {
       return false;
     }
-    Map.Entry<Long,Long> lowerEntry = ipRangeMap.floorEntry(rangeStart);
-    Map.Entry<Long,Long> higherEntry = ipRangeMap.ceilingEntry(rangeStart);
+    Map.Entry<Long, Long> lowerEntry = ipRangeMap.floorEntry(rangeStart);
+    Map.Entry<Long, Long> higherEntry = ipRangeMap.ceilingEntry(rangeStart);
 
     long newStart = rangeStart;
     long newEnd = rangeEnd;

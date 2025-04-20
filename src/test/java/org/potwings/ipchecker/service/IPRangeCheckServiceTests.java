@@ -2,7 +2,12 @@ package org.potwings.ipchecker.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.net.util.SubnetUtils;
+import org.apache.commons.net.util.SubnetUtils.SubnetInfo;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -166,5 +171,40 @@ public class IPRangeCheckServiceTests {
     assertThat(beforeAddResult).isFalse();
     // 정상적으로 병합되었을 경우 추가 대역대를 기준으로 판단
     assertThat(afterAddResult).isTrue();
+  }
+
+  @Test
+  @DisplayName("IP 대역대 목록 정상 반환")
+  public void testGetIpRange() {
+    // arrange
+    String ipRange = "192.168.1.0/16";
+    ipRangeCheckService.addRange(ipRange);
+    SubnetUtils subnetUtils = new SubnetUtils(ipRange);
+    subnetUtils.setInclusiveHostCount(true);
+    SubnetInfo info = subnetUtils.getInfo();
+    long rangeStart = ipToLong(info.getLowAddress());
+    long rangeEnd = ipToLong(info.getHighAddress());
+
+    // act
+    Map<Long, Long> ipRangeMap = ipRangeCheckService.getIpRangeMap();
+
+    // assert
+    assertThat(ipRangeMap).isNotEmpty();
+    assertThat(ipRangeMap.get(rangeStart)).isEqualTo(rangeEnd);
+  }
+
+  // "IP 대역대 목록 정상 반환" 테스트 시 사용하기 위한 메소드
+  private Long ipToLong(String ip) {
+    byte[] bytes = null;
+    try {
+      bytes = InetAddress.getByName(ip).getAddress(); // IP를 바이트 배열로 변환
+    } catch (UnknownHostException e) {
+      log.warn("IP Parse Fail : ip: {}", e.getMessage(), e);
+    }
+    long result = 0;
+    for (byte b : bytes) {
+      result = (result << 8) | (b & 0xFF); // 왼쪽 시프트 후 OR 연산
+    }
+    return result;
   }
 }

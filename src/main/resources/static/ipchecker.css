@@ -1,0 +1,37 @@
+.visualization-container {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  border: 1px solid #999;
+  margin-top: 20px;
+  background-color: #fff;
+}
+
+.ip-bar {
+  position: absolute;
+  height: 10px;
+  border-radius: 4px;
+}
+
+.ip-label {
+  position: absolute;
+  font-size: 11px;
+  color: #333;
+  white-space: nowrap;
+}
+
+.ip-label.left {
+  transform: translateX(0%);
+}
+
+.ip-label.right {
+  transform: translateX(-100%);
+}
+
+.baseline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #aaa;
+}

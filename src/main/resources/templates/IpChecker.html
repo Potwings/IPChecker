@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>IP 대역대 시각화</title>
+  <link rel="stylesheet" href="/ipchecker.css">
+</head>
+<body>
+<h1>IP 대역대 시각화</h1>
+
+<div>
+  <input type="text" id="rangeInput" placeholder="CIDR (예: 192.168.0.0/24)">
+  <button onclick="addRange()">대역대 추가</button>
+  <button onclick="resetIpRanges()">대역대 초기화</button>
+</div>
+
+<div id="visualization" class="visualization-container"></div>
+
+<script src="/ipchecker.js"></script>
+</body>
+</html>
