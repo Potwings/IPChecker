@@ -6,18 +6,19 @@
 (https://github.com/apache/james-project/blob/master/server/dns-service/dnsservice-library/src/main/java/org/apache/james/dnsservice/library/netmatcher/NetMatcher.java)
 
 <b>해당 클래스에서는 아이피 범위(Subnet Mask)들을 SortedSet(TreeSet)에 저장하고 있었다.</b> </br>
-<img src="img/img.png" style="width: 600px; height: auto;"/>
+<img src="img/img.png" style="width: 400px; height: auto;"/>
 
 <img src="img/img_1.png" style="width: 600px; height: auto;"/>
 
 허나 아이피는 그저 작은 숫자가 먼저 오도록 정렬되고 있었고 포함 여부를 확인하는 메소드에서도 별 다른 활용을 하지 않고 있었다.
+
 <img src="img/img_2.png" style="width: 600px; height: auto;"/>
 
 따라서 그냥 HashSet으로 변경하여 성능을 좀 더 올려볼까라고 생각하였으나 정렬을 활용하면 더 좋은 성능을 끌어낼 수 있지 않을까 라는 생각이 들어 새로운 방법을 찾기 시작하였다.
 
-## 게빌 과정
+## 개발 과정
 
-### GPT와의 협업
+### 기능 설계
 우선 '라이브러리에서 TreeSet을 사용하는 이유가 있지 않을까?'해서 이를 활용할 수 있는 방법에 대해 GPT에게 물어보았다.</br>
 GPT가 제시한 방법은 String으로 정렬된 TreeMap의 대역대들 중 아이피보다 작은 대역대들만 탐색하는 것이었다.
 
@@ -114,7 +115,7 @@ public class IPSubnetChecker {
 
 이를 보고 <b>'만일 대역대를 숫자 범위로 변환하여 중복되는 범위를 병합한다면 String으로 정렬하였을 때의 문제점을 해결할 수 있지 않을까?'</b> 라는 생각을 하게 되어 개발을 시작하게 되었다.
 
-## 개발 과정
+### TDD(Test Driven Development)
 TDD로 진행하여 기본적인 기능인 "대역대 추가", "아이피 포함 여부 확인" 테스트부터 작성하여 진행하였다.
 
 여기서 바로 문제가 발생하였는데, 등록된 아이피 대역대 정보는 클래스 내부에서 포함 여부를 확인하기 위해서만 사용되는 데이터이므로 외부에 노출될 필요가 없는 데이터라 생각하여 private으로 되어 있었다.
@@ -173,20 +174,52 @@ TDD로 진행하여 기본적인 기능인 "대역대 추가", "아이피 포함
 
 따라서 대역대 추가 시 중복되는 범위 병합 여부 확인을 위해 테스트해야할 케이스는 아래와 같다.
 
-
+1. 두 대역대 시작 지점이 동일한 경우
 - (기존 < 추가)
     <img src="https://github.com/user-attachments/assets/303b2c92-0a67-4e44-8c03-c1fdea862186" style="width: 900px; height: auto;"/>
 
 - (기존 > 추가)
     <img src="https://github.com/user-attachments/assets/dc39dd01-4c80-44a4-9c10-2615b6ab9b3c" style="width: 900px; height: auto;"/>
 
-2. 기존 대역대의 종료점이 동일하나 시작점이 다른 경우 
+2. 두 대역대 끝 지점이 동일한 경우
 - (기존 < 추가)
     <img src="https://github.com/user-attachments/assets/68bf9d7d-bef4-4a35-9ab6-7398a6e02684" style="width: 900px; height: auto;"/>
 
 - (기존 > 추가)
     <img src="https://github.com/user-attachments/assets/efba76cd-b18c-41ef-8dbd-549b917727e5" style="width: 900px; height: auto;"/>
 
-3. 기존 대역대에 중간에 포함되는 경우
+3. 기존 대역대가 추가 대역대를 포함하는 경우
+    <img src="https://github.com/user-attachments/assets/cf4776e1-4682-4b2c-9e52-4e1837dd5417" style="width: 900px; height: auto;"/>
 
-4. 기존 대역대를 중간에 포함하는 경우
+4. 추가 대역대가 기존 대역대를 포함하는 경우
+    <img src="https://github.com/user-attachments/assets/d4ec461d-55de-4177-8fcd-dfe39f725df6" style="width: 900px; height: auto;"/>
+
+총 6개의 테스트 케이스를 작성하였고, 이 케이스들을 모두 통과할 수 있도록 아이피 대역대 추가 기능을 구현하였다.
+
+### 화면 추가
+대역대를 시각화한다면 추후 사용자에게 왜 해당 아이피가 포함되어있는 것으로 판단되었는지 쉽게 이해시킬 수 있겠다는 생각이 들어 프론트엔드 구성을 시작하게 되었다.
+
+대역대의 경우 이미 서버에서 Long값으로 가지고 있으니 이를 프론트에서 불러와 다시 IP로 변환하면 좋겠다는 생각이 들었고</br>
+해당 내용을 바탕으로 어떻게 구성하면 좋을지 GPT에게 물어보았다.
+
+<img src="https://github.com/user-attachments/assets/71a75b7b-06e1-43cd-af22-6066fcd1359b" style="width: 300px; height: auto;"/></br>
+<img src="https://github.com/user-attachments/assets/ba9007fb-8003-4e6e-a5f8-8771cc7055bc" style="width: 300px; height: auto;"/>
+
+GPT가 어느정도 기본은 작성해주었으나 디테일이 많이 부족하였고, 정상적으로 동작하지 않는 부분도 많았다.
+다행이 프론트에 대한 기본적인 이해는 있어 충분히 해결할 수 있었고, 아래와 같이 기본적인 화면을 구성할 수 있었다.
+
+<img src="https://github.com/user-attachments/assets/3ce7ace4-941e-42ff-bd34-073521b2ee49" style="width: 900px; height: auto;"/>
+
+### 누락된 테스트 케이스 발생
+화면을 구성한 후 이런 저런 데이터를 넣어보다, 초기에 테스트 케이스 고려 시 놓친 부분이 있다는 것을 깨닫게 되었다.
+
+두 대역대를 등록하고 앞쪽의 대역대에 이미 포함되는 대역대를 추가할 떄 발생하는 문제였는데, 아래와 같이 테스트하다 알게 되었다.
+
+1. "192.168.1.0/24"와 "192.168.5.0/24"를 등록
+    ![image](https://github.com/user-attachments/assets/eb0c773a-1186-4aa4-b905-2ae7ac7a9405)
+
+2. "192.168.1.0/24"에 포함되는 "192.168.1.247/31" 추가
+    ![image](https://github.com/user-attachments/assets/14982c4b-191c-4840-8f89-c8485331d207)
+    (192.168.1.0/24에 이미 포함되어 있으므로 시각화된 대역대는 변화가 없어야하는데 비정상적으로 병합되는 모습)
+
+이를 해결하기 위해 해당 케이스를 테스트 코드로 작성해주었고, 서비스 코드를 확인해보았는데 여기에 문제점이 있었다.
