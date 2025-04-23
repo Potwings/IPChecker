@@ -207,4 +207,55 @@ public class IPRangeCheckServiceTests {
     }
     return result;
   }
+
+
+  @Test
+  @DisplayName("3개의 대역대가 추가되는 경우")
+  public void testTripleIpRange() {
+    // arrange
+    String ipRange1 = "192.168.1.0/24"; // 192.168.1.0 ~ 192.168.1.255
+    String ipRange2 = "192.168.5.0/24"; // 192.168.5.0 ~ 192.168.5.255
+    String ipRange3 = "192.168.1.247/32"; // 192.168.1.247 단일
+    String excludeIp = "192.168.2.248"; // 포함하지 않아야 함
+    ipRangeCheckService.addRange(ipRange1);
+    ipRangeCheckService.addRange(ipRange2);
+    ipRangeCheckService.addRange(ipRange3);
+
+    // act
+    boolean result = ipRangeCheckService.isIncludeIP(excludeIp);
+
+    //assert
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  @DisplayName("기존 두개의 대역대 사이에 대역대가 추가되는 경우(병합이 앞뒤 모두 이루어지는 경우)")
+  public void testTripleMerge() {
+    // arrange
+    String ipRange1 = "192.168.1.0/24"; // 192.168.1.0 ~ 192.168.1.255
+    String ipRange2 = "192.168.3.0/24"; // 192.168.3.0 ~ 192.168.3.255
+    String ipRange3 = "192.168.2.0/24"; // 192.168.2.0 ~ 192.168.2.255
+    String includeIp1 = "192.168.1.248";
+    String includeIp2 = "192.168.2.24";
+    String includeIp3 = "192.168.3.43";
+    String excludeIp0 = "192.168.0.248";
+    String excludeIp4 = "192.168.4.0";
+    ipRangeCheckService.addRange(ipRange1);
+    ipRangeCheckService.addRange(ipRange2);
+    ipRangeCheckService.addRange(ipRange3);
+
+    // act
+    boolean includeResult1 = ipRangeCheckService.isIncludeIP(includeIp1);
+    boolean includeResult2 = ipRangeCheckService.isIncludeIP(includeIp2);
+    boolean includeResult3 = ipRangeCheckService.isIncludeIP(includeIp3);
+    boolean excludeResult0 = ipRangeCheckService.isIncludeIP(excludeIp0);
+    boolean excludeResult4 = ipRangeCheckService.isIncludeIP(excludeIp4);
+
+    //assert
+    assertThat(includeResult1).isTrue();
+    assertThat(includeResult2).isTrue();
+    assertThat(includeResult3).isTrue();
+    assertThat(excludeResult0).isFalse();
+    assertThat(excludeResult4).isFalse();
+  }
 }

@@ -76,13 +76,21 @@ public class IPRangeCheckService {
     long newStart = rangeStart;
     long newEnd = rangeEnd;
 
+    /*
+     * 앞쪽 대역대와 병합 가능 여부 확인
+     * 현재 대역대의 시작점보다 앞쪽 대역대의 종료점이 더 클 경우 둘 병합
+     */
     if (lowerEntry != null && lowerEntry.getValue() >= rangeStart - 1) {
       newStart = Math.min(lowerEntry.getKey(), newStart);
       newEnd = Math.max(lowerEntry.getValue(), newEnd);
       ipRangeMap.remove(lowerEntry.getKey());
     }
 
-    if (higherEntry != null && higherEntry.getValue() >= rangeStart + 1) {
+    /*
+     * 뒤쪽 대역대와 병합 가능 여부 확인
+     * 현재 대역대의 종료점보다 뒤쪽 대역대의 시작점이 더 작을 경우 둘 병합
+     */
+    if (higherEntry != null && higherEntry.getKey() <= rangeEnd + 1) {
       newStart = Math.min(higherEntry.getKey(), newStart);
       newEnd = Math.max(higherEntry.getValue(), newEnd);
       ipRangeMap.remove(higherEntry.getKey());
