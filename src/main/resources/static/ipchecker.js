@@ -1,8 +1,7 @@
 const COLOR_PALETTE = [
-  "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
-  "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
-  "#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00",
-  "#ffff33", "#a65628", "#f781bf", "#999999", "#66c2a5"
+  "#0d6efd", "#6610f2", "#6f42c1", "#d63384", "#dc3545",
+  "#fd7e14", "#ffc107", "#198754", "#20c997", "#0dcaf0",
+  "#6c757d", "#343a40", "#495057", "#adb5bd", "#f8f9fa"
 ];
 
 window.onload = () => {
@@ -30,11 +29,10 @@ function visualizeRanges(rangeMap) {
   const max = Math.max(...keys.map(k => rangeMap[k]));
   const totalWidth = container.clientWidth;
   const range = max - min || 1;
-  const baselineY = 60;
+  const baselineY = 70;
 
   const baseline = document.createElement("div");
   baseline.className = "baseline";
-  baseline.style.top = `${baselineY}px`;
   container.appendChild(baseline);
 
   keys.forEach((start, index) => {
@@ -48,36 +46,32 @@ function visualizeRanges(rangeMap) {
     const startIp = longToIp(start);
     const endIp = longToIp(end);
 
-    // 막대 (기준선에 딱 붙게)
     const bar = document.createElement("div");
     bar.className = "ip-bar";
     bar.style.left = `${barLeft}px`;
-    bar.style.top = `${baselineY - 10}px`; // 막대가 기준선 바로 위에 닿도록
+    bar.style.top = `${baselineY - 10}px`;
     bar.style.width = `${barWidth}px`;
     bar.style.backgroundColor = COLOR_PALETTE[index % COLOR_PALETTE.length];
     container.appendChild(bar);
 
-    // 시작점 라벨
     const startLabel = document.createElement("div");
     startLabel.className = "ip-label left";
     startLabel.textContent = startIp;
     startLabel.style.left = `${barLeft}px`;
-    startLabel.style.top = `${baselineY + 5}px`;
+    startLabel.style.top = `${baselineY + 8}px`;
     container.appendChild(startLabel);
 
-    // 끝점 라벨
     const endLabel = document.createElement("div");
     endLabel.className = "ip-label right";
     endLabel.textContent = endIp;
     endLabel.style.left = `${barLeft + barWidth}px`;
-    endLabel.style.top = `${baselineY + 5}px`;
+    endLabel.style.top = `${baselineY + 8}px`;
     container.appendChild(endLabel);
   });
 }
 
-
 async function addRange() {
-  const cidr = document.getElementById("rangeInput").value;
+  const cidr = document.getElementById("rangeInput").value.trim();
   if (!cidr || !cidr.includes("/")) {
     alert("CIDR 형식이 잘못되었습니다.");
     return;
@@ -105,10 +99,7 @@ async function resetIpRanges() {
   if (!confirm("정말 모든 IP 대역대를 초기화하시겠습니까?")) return;
 
   try {
-    const response = await fetch("/ipRanges", {
-      method: "DELETE"
-    });
-
+    const response = await fetch("/ipRanges", { method: "DELETE" });
     if (response.ok) {
       await loadIpRanges();
       alert("초기화 완료");

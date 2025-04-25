@@ -54,6 +54,7 @@ GPT가 제시한 방법은 String으로 정렬된 TreeMap의 대역대들 중 �
 <img src="img/img_4.png" style="width: 600px; height: auto;"/>
 
 이때 GPT는 아이피 포함 여부를 확인해주는 코드를 작성해주었는데 그 중에서 눈에 띄는 부분은 ipToInt라는 IP를 int로 변환해주는 메소드였다.
+
 <img src="img/img_5.png" style="width: 600px; height: auto;"/>
 
 <details>
@@ -253,3 +254,5 @@ GPT가 어느정도 기본은 작성해주었으나 디테일이 많이 부족�
  
 - 기존 두개의 대역대 사이에 대역대가 추가되는 경우(병합이 앞뒤 모두 이루어지는 경우)
 <img src="https://github.com/user-attachments/assets/cb3b7f5e-4c20-494c-ae53-d62eaff1eed8" style="width: 900px; height: auto;"/>
+
+
