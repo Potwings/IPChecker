@@ -36,4 +36,11 @@ public class IPRangeCheckRestController {
     service.clearIpRangeMap();
     return ResponseEntity.ok().build();
   }
+
+  @PostMapping("isInclude")
+  public ResponseEntity<Boolean> isInclude(@RequestBody String ip) {
+    boolean result = service.isIncludeIP(ip);
+
+    return ResponseEntity.ok(result);  // 200 OK + true
+  }
 }

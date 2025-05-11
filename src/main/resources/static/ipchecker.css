@@ -45,3 +45,29 @@ body {
   height: 2px;
   background-color: #adb5bd;
 }
+
+.ip-marker-container {
+  position: absolute;
+  top: 25px;
+  transform: translateX(-50%);
+  z-index: 1000;
+  text-align: center;
+}
+
+.ip-marker-icon {
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 12px solid red; /* 핀 색상 */
+  margin: 0 auto;
+}
+
+.ip-marker-label {
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2px 5px;
+  border-radius: 4px;
+  color: #212529;
+  margin-bottom: 2px;
+}
