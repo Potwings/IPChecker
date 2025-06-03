@@ -13,32 +13,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class IPRangeCheckService {
 
-  // key: 범위 start, value: 범위 end 형식으로 아이피 범위를 저장
-  private TreeMap<Long, Long> ipRangeMap = new TreeMap<>();
-
-  /**
-   * 대역대 시각화를 위한 전체 아이피 목록
-   *
-   * @return 전체 아이피 대역대 목록
-   */
-  public Map<Long, Long> getIpRangeMap() {
-    return ipRangeMap;
-  }
-
-  /**
-   * 보관한 대역대 초기화
-   */
-  public void clearIpRangeMap() {
-    ipRangeMap.clear();
-  }
-
   /**
    * 아이피 입력 시 Map에 있는 Range들을 확인하여 포함되는지 여부를 반환하는 메소드
    *
+   * @param ipRangeMap 사용자가 추가한 아이피 대역대 전체
    * @param ip 포함 여부 확인할 아이피
    * @return 아이피 포함 여부
    */
-  public boolean isIncludeIP(String ip) {
+  public boolean isIncludeIP(TreeMap<Long,Long> ipRangeMap, String ip) {
 
     Long ipLong = ipToLong(ip);
     if (ipLong == null) {
@@ -56,9 +38,10 @@ public class IPRangeCheckService {
    * 새로운 값이 추가될 경우 Map의 데이터를 어떻게 중복제거 할 것인가?
    * 중복되는 범위를 확인 후 중복되는 entry 제거 후 추가
    *
+   * @param ipRangeMap 사용자가 추가한 아이피 대역대 전체
    * @param ipRange 범위에 포함할 신규 대역대
    */
-  public boolean addRange(String ipRange) {
+  public TreeMap<Long, Long> addRange(TreeMap<Long,Long> ipRangeMap, String ipRange) {
     SubnetUtils subnetUtils = new SubnetUtils(ipRange);
     // 네트워크 주소, 브로드 캐스트 주소도 포함하여 검사
     subnetUtils.setInclusiveHostCount(true);
@@ -68,7 +51,7 @@ public class IPRangeCheckService {
     Long rangeStart = ipToLong(lowAddress);
     Long rangeEnd = ipToLong(highAddress);
     if (rangeStart == null || rangeEnd == null) {
-      return false;
+      return null;
     }
     Map.Entry<Long, Long> lowerEntry = ipRangeMap.floorEntry(rangeStart);
     Map.Entry<Long, Long> higherEntry = ipRangeMap.ceilingEntry(rangeStart);
@@ -98,7 +81,7 @@ public class IPRangeCheckService {
 
     ipRangeMap.put(newStart, newEnd);
 
-    return true;
+    return ipRangeMap;
   }
 
   /**

@@ -1,11 +1,11 @@
 package org.potwings.ipchecker.controller;
 
 import java.util.Map;
+import java.util.TreeMap;
 import lombok.RequiredArgsConstructor;
+import org.potwings.ipchecker.dto.IpRangeCheckRequest;
 import org.potwings.ipchecker.service.IPRangeCheckService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,30 +16,16 @@ public class IPRangeCheckRestController {
 
   private final IPRangeCheckService service;
 
-
-  @GetMapping("/ipRanges")
-  public Map<Long, Long> getIpRange() {
-    return service.getIpRangeMap();
-  }
-
   @PostMapping("/ipRanges")
-  public ResponseEntity<Void> addIpRange(@RequestBody String ipRange) {
-    if (service.addRange(ipRange)) {
-      return ResponseEntity.ok().build();
-    } else {
-      return ResponseEntity.badRequest().build();
-    }
-  }
+  public ResponseEntity<TreeMap> addIpRange(@RequestBody IpRangeCheckRequest request) {
+    TreeMap<Long, Long> ipRangeMap = service.addRange(request.getIpRangeMap(), request.getNewIpRange());
 
-  @DeleteMapping("ipRanges")
-  public ResponseEntity<Void> clearIpRange() {
-    service.clearIpRangeMap();
-    return ResponseEntity.ok().build();
+    return ResponseEntity.ok().body(ipRangeMap);
   }
 
   @PostMapping("isInclude")
-  public ResponseEntity<Boolean> isInclude(@RequestBody String ip) {
-    boolean result = service.isIncludeIP(ip);
+  public ResponseEntity<Boolean> isInclude(@RequestBody IpRangeCheckRequest request) {
+    boolean result = service.isIncludeIP(request.getIpRangeMap(), request.getCheckingIp());
 
     return ResponseEntity.ok(result);  // 200 OK + true
   }

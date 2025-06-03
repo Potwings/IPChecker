@@ -4,15 +4,24 @@ const COLOR_PALETTE = [
   "#6c757d", "#343a40", "#495057", "#adb5bd", "#f8f9fa"
 ];
 
+const IP_RANGE_MAP = "ipRangeMap";
+
 window.onload = () => {
   loadIpRanges();
 };
 
 async function loadIpRanges() {
   try {
-    const response = await fetch("/ipRanges");
-    const data = await response.json();
-    visualizeRanges(data);
+    const ipRangeMap = JSON.parse(localStorage.getItem(IP_RANGE_MAP));
+    if (ipRangeMap != null) {
+      visualizeRanges(ipRangeMap);
+    } else {
+      const container = document.getElementById("visualization");
+      container.innerHTML = "";
+      globalRangeStart = 0;
+      globalRangeEnd = 0;
+
+    }
   } catch (e) {
     console.error("IP 대역 불러오기 실패:", e);
   }
@@ -86,16 +95,25 @@ async function addRange() {
     return;
   }
 
+  const ipRangeMap = localStorage.getItem(IP_RANGE_MAP);
+
+  const request = {
+    ipRangeMap: ipRangeMap == null ? {} : JSON.parse(ipRangeMap),
+    newIpRange: cidr
+  }
+
   try {
     const response = await fetch("/ipRanges", {
       method: "POST",
-      headers: {"Content-Type": "text/plain"},
-      body: cidr
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(request)
     });
 
     if (response.ok) {
-      await loadIpRanges();
       document.getElementById("rangeInput").value = "";
+      const ipRangeMap = await response.json();
+      localStorage.setItem(IP_RANGE_MAP, JSON.stringify(ipRangeMap));
+      loadIpRanges();
     } else {
       alert("대역대 추가 실패");
     }
@@ -108,19 +126,8 @@ async function resetIpRanges() {
   if (!confirm("정말 모든 IP 대역대를 초기화하시겠습니까?")) {
     return;
   }
-
-  try {
-    const response = await fetch("/ipRanges", {method: "DELETE"});
-    if (response.ok) {
-      await loadIpRanges();
-      alert("초기화 완료");
-    } else {
-      alert("초기화 실패");
-    }
-  } catch (e) {
-    console.error("초기화 요청 실패:", e);
-    alert("요청 중 오류 발생");
-  }
+  localStorage.clear();
+  loadIpRanges();
 }
 
 function longToIp(long) {
@@ -135,19 +142,30 @@ function longToIp(long) {
 async function checkIp() {
   const ip = document.getElementById("checkIpInput").value.trim();
   const resultEl = document.getElementById("checkResult");
+  const ipRangeMap = localStorage.getItem(IP_RANGE_MAP)
   removeExistingMarkers();
+
+  if (ipRangeMap == null) {
+    alert("대역대를 우선 추가해주세요.");
+    return;
+  }
 
   if (!ip || !/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)) {
     alert("유효한 IP 주소를 입력하세요.");
     return;
   }
 
+  const request = {
+    ipRangeMap: JSON.parse(ipRangeMap),
+    checkingIp: ip
+  }
+
   try {
     const response = await fetch("/isInclude", {
       method: "POST",
-      headers: {"Content-Type": "text/plain"},
-      body: ip
-    });
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(request)
+    })
 
     if (!response.ok) {
       resultEl.textContent = "서버 응답 오류";
